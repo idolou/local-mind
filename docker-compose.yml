@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # 0. The Face (React Frontend)
+  frontend:
+    build: ./frontend
+    container_name: local_mind_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevent host node_modules from overwriting container's
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  # 1. The Brain (FastAPI Backend)
+  backend:
+    build: .
+    container_name: local_mind_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis_db:6379/0
+      - QDRANT_URL=http://qdrant_db:6333
+      - OLLAMA_URL=http://ollama_engine:11434
+    depends_on:
+      - redis_db
+      - qdrant_db
+      - ollama_engine
+    volumes:
+      - ./app:/app/app # Hot-reload: Changes in your code update immediately
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # 2. Hot Memory (Redis)
+  redis_db:
+    image: redis:alpine
+    container_name: local_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  # 3. Cold Memory (Qdrant)
+  qdrant_db:
+    image: qdrant/qdrant:latest
+    container_name: local_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: always
+
+  # 4. The Muscle (Ollama)
+  ollama_engine:
+    image: ollama/ollama:latest
+    container_name: local_ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Note: If you have an NVIDIA GPU, uncomment the section below
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  redis_data:
+  qdrant_data:
+  ollama_data:
