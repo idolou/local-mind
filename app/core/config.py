@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     APP_NAME: str = "Local-Mind"
     DEBUG: bool = False
+    DEFAULT_MODEL: str = "gemma:2b"
+
     
     # Database URLs
     REDIS_URL: str

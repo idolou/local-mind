@@ -1,7 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 3000,
+    host: true, // Needed for Docker
+    watch: {
+      usePolling: true, // Fix for Windows file changes not triggering inside Docker
+    },
+  },
 })
